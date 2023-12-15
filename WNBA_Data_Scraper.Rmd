@@ -1,0 +1,159 @@
+---
+title: "WNBA_Playoff_Scraper"
+author: "Megan Glass"
+date: "2023-11-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Libraries
+ 
+```{r}
+library(rvest) # Easily Harvest (Scrape) Web Pages
+library(tidyverse)
+library(tidyr)
+```
+
+
+## Read the Web Page
+```{r}
+playoff_url <- "https://www.basketball-reference.com/wnba/playoffs/series.html"
+playoff_page <- read_html(playoff_url)
+playoff_page
+```
+
+```{r}
+playoff_table <- playoff_page %>%
+  html_table() %>%
+  .[[1]]
+
+playoff_table
+```
+## Pivot to long
+```{r}
+playoff_table <- gather(playoff_table, key = "Winner/Loser", value = "Team", c("Winner", "Loser"))
+
+playoff_table
+```
+
+## Rename Columns
+```{r}
+names(playoff_table)[4] <- "Dates"
+names(playoff_table)[6] <- "Wins Winner"
+names(playoff_table)[8] <- "Wins Loser"
+```
+
+## Remove empty columns
+```{r}
+playoff_table <- playoff_table[which(playoff_table$Rk != "Rk"), -c(5,7)]
+playoff_table <- playoff_table[,-1]
+```
+
+## Save .csv
+```{r}
+write_csv(playoff_table, "WNBA_Playoffs.csv")
+```
+
+
+
+
+## Read URL
+
+```{r}
+schedule_url <- "https://www.basketball-reference.com/wnba/years/2019_games.html"
+schedule_page <- read_html(schedule_url)
+schedule_page
+```
+
+```{r}
+schedule_table <- schedule_page %>%
+  html_table() %>%
+  .[[1]]
+
+schedule_table
+```
+
+### put date in correct format
+```{r}
+library(stringr)
+formatted_date <- sub('^[^,]+, ', '', schedule_table$Date)
+formatted_date
+
+schedule_table$Date <- as.Date(formatted_date, format = '%b %d, %Y')
+```
+
+
+## Repeat
+```{r}
+schedule_url <- "https://www.basketball-reference.com/wnba/years/2020_games.html"
+schedule_page <- read_html(schedule_url)
+
+schedule_table2 <- schedule_page %>%
+  html_table() %>%
+  .[[1]]
+
+formatted_date <- sub('^[^,]+, ', '', schedule_table2$Date)
+
+schedule_table2$Date <- as.Date(formatted_date, format = '%b %d, %Y')
+
+schedule_table <- rbind(schedule_table, schedule_table2)
+```
+```{r}
+schedule_url <- "https://www.basketball-reference.com/wnba/years/2021_games.html"
+schedule_page <- read_html(schedule_url)
+
+schedule_table3 <- schedule_page %>%
+  html_table() %>%
+  .[[1]]
+
+formatted_date <- sub('^[^,]+, ', '', schedule_table3$Date)
+
+schedule_table3$Date <- as.Date(formatted_date, format = '%b %d, %Y')
+
+schedule_table3 <- schedule_table3[,-7]
+
+schedule_table <- rbind(schedule_table, schedule_table3)
+```
+
+```{r}
+schedule_url <- "https://www.basketball-reference.com/wnba/years/2022_games.html"
+schedule_page <- read_html(schedule_url)
+
+schedule_table4 <- schedule_page %>%
+  html_table() %>%
+  .[[1]]
+
+formatted_date <- sub('^[^,]+, ', '', schedule_table4$Date)
+
+schedule_table4$Date <- as.Date(formatted_date, format = '%b %d, %Y')
+
+schedule_table4 <- schedule_table4[,-7]
+
+schedule_table <- rbind(schedule_table, schedule_table4)
+```
+
+```{r}
+schedule_url <- "https://www.basketball-reference.com/wnba/years/2023_games.html"
+schedule_page <- read_html(schedule_url)
+
+schedule_table5 <- schedule_page %>%
+  html_table() %>%
+  .[[1]]
+
+formatted_date <- sub('^[^,]+, ', '', schedule_table5$Date)
+
+schedule_table5$Date <- as.Date(formatted_date, format = '%b %d, %Y')
+
+schedule_table5 <- schedule_table5[,-7]
+
+schedule_table <- rbind(schedule_table, schedule_table5)
+```
+
+## write to csv
+```{r}
+write.csv(schedule_table, "WNBA_schedules_19-23.csv")
+```
+
